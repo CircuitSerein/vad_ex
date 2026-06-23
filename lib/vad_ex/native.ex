@@ -13,7 +13,7 @@ defmodule VadEx.Native do
       (`ResourceArc<Mutex<StreamState>>`). Owned by the calling process; the
       BEAM drops it when that process dies.
 
-  See `docs/research/02-onnx-nif-rustler-ort.md` for the full NIF design.
+  See `docs/architecture.md` for the NIF design.
   """
 
   @version Mix.Project.config()[:version]
@@ -22,49 +22,22 @@ defmodule VadEx.Native do
     otp_app: :vad_ex,
     crate: "vad_ex",
     base_url: "https://github.com/CircuitSerein/vad_ex/releases/download/v#{@version}",
-    force_build: System.get_env("VAD_EX_BUILD") in ["1", "true"],
+    # Build from source for dev checkouts (no published artifacts exist for a "*-dev" version)
+    # or when VAD_EX_BUILD is set; released (non-dev) versions pull the precompiled NIF.
+    force_build: System.get_env("VAD_EX_BUILD") in ["1", "true"] or String.contains?(@version, "-dev"),
     version: @version,
+    # Lean v0.1 matrix. Each target ships ONE self-contained .so — ONNX Runtime is statically
+    # linked into the NIF via ort's `download-binaries`, so there is no libonnxruntime to bundle.
+    # pyke ships static ORT for all four (🟢). Intel macOS (x86_64-apple-darwin), musl, and
+    # windows-gnu are deferred to a later release.
     targets: ~w[
       aarch64-apple-darwin
       aarch64-unknown-linux-gnu
-      aarch64-unknown-linux-musl
-      x86_64-apple-darwin
       x86_64-unknown-linux-gnu
-      x86_64-unknown-linux-musl
-      x86_64-pc-windows-gnu
       x86_64-pc-windows-msvc
     ],
-    nif_versions: ["2.15", "2.16", "2.17"]
-
-  @doc """
-  Initialize ort's load-dynamic `libonnxruntime` path (call once before `load_model/1` in
-  production, with the bundled `priv/lib` dylib). Optional for local dev when `ORT_DYLIB_PATH`
-  is set. Process-global, first-call-wins.
-  """
-  @spec init_ort_from(dylib_path :: binary()) :: {:ok, :ok} | {:error, term()}
-  def init_ort_from(_dylib_path), do: :erlang.nif_error(:nif_not_loaded)
-
-  @doc """
-  Resolve and initialize the bundled `libonnxruntime` from `priv/lib`, once per node. Called by
-  `VadEx.Session` / `VadEx.Membrane.Filter` before loading the model. If no dylib is bundled
-  (local dev), this is a no-op and ort falls back to `ORT_DYLIB_PATH` / the system default.
-  """
-  @spec ensure_initialized() :: :ok
-  def ensure_initialized do
-    if :persistent_term.get({__MODULE__, :ort_initialized}, false) do
-      :ok
-    else
-      priv = :code.priv_dir(:vad_ex)
-
-      case Path.wildcard(Path.join([priv, "lib", "*onnxruntime*"])) do
-        [dylib | _] -> init_ort_from(dylib)
-        [] -> :ok
-      end
-
-      :persistent_term.put({__MODULE__, :ort_initialized}, true)
-      :ok
-    end
-  end
+    # One artifact per target, built targeting NIF 2.15 (forward-compatible with 2.16/2.17).
+    nif_versions: ["2.15"]
 
   @doc "Load the Silero ONNX model from a file path → `{:ok, model_ref}`."
   @spec load_model(path :: binary()) :: {:ok, reference()} | {:error, term()}

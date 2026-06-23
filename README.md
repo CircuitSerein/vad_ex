@@ -7,9 +7,9 @@ Real-time speech/silence detection over an audio stream, plus utterance endpoint
 running through a Rust ([ONNX Runtime](https://github.com/pykeio/ort)) NIF. Ships as a
 **precompiled** binary, so consumers need no Rust toolchain.
 
-> **Status: pre-release scaffold.** No functional `0.1.0` on hex yet. This repo currently
-> holds the architecture, decisions, and the full pre-build research (`docs/research/`).
-> Build plan: [`docs/build-plan.md`](docs/build-plan.md).
+> **Status: pre-release.** No functional `0.1.0` on hex yet — the first release (streaming VAD +
+> endpointing, precompiled) is in progress. See [`CHANGELOG.md`](CHANGELOG.md) and
+> [`docs/architecture.md`](docs/architecture.md).
 
 ## Why
 

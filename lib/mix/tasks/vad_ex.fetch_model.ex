@@ -6,7 +6,6 @@ defmodule Mix.Tasks.VadEx.FetchModel do
 
   Pinned to a **tagged** ref (not `master`) so the bundled weights cannot silently change — a future
   v6.3 could keep the identical byte size with different weights, which would break the golden vector.
-  See docs/research/07-2026-06-23-verification-and-models.md.
 
       mix vad_ex.fetch_model        # download if missing/invalid, then verify
       mix vad_ex.fetch_model --force  # re-download even if a valid file exists

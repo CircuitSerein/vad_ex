@@ -6,8 +6,7 @@ defmodule VadEx.Session do
 
   This per-stream-process design is deliberate: 10k concurrent streams = 10k
   isolated, crash-isolated processes, the BEAM's structural advantage for
-  real-time voice at scale (see `docs/research/04-prior-art.md` and the Type-B
-  note in `docs/build-plan.md`).
+  real-time voice at scale.
 
   ## Options
 
@@ -44,7 +43,6 @@ defmodule VadEx.Session do
   @impl true
   def init(opts) do
     model_path = opts[:model_path] || @default_model || default_model_path()
-    :ok = Native.ensure_initialized()
 
     with {:ok, model} <- Native.load_model(model_path),
          {:ok, stream} <- Native.new_stream(model) do

@@ -2,7 +2,7 @@ defmodule VadEx.Membrane.FilterTest do
   use ExUnit.Case, async: false
 
   # Drives a real Membrane pipeline: Testing.Source -> VadEx.Membrane.Filter -> Testing.Sink.
-  # :nif tagged — run with: ORT_DYLIB_PATH=... VAD_EX_BUILD=1 mix test --include nif
+  # :nif tagged — run with: VAD_EX_BUILD=1 mix test --include nif
   @moduletag :nif
 
   import Membrane.ChildrenSpec

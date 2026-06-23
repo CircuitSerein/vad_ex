@@ -7,7 +7,7 @@
 //! Contract (verified live against the shipped v6.2 .onnx, opset 16, producer spox):
 //!   Inputs:  input f32 [1, 576] (= 64 context + 512 window @16k) | state f32 [2,1,128] | sr i64 [1]
 //!   Outputs: output f32 [1, 1] (speech prob 0..1)               | stateN f32 [2,1,128]
-//! See docs/research/07-2026-06-23-verification-and-models.md and docs/staged-implementation-plan.md.
+//! See docs/architecture.md.
 //!
 //! ## Session sharing & `Session::run(&mut self)`
 //! ort rc.12's `Session::run` takes `&mut self`, so the immutable-shared-session design is impossible
@@ -16,10 +16,10 @@
 //! inference parallelism at 1 regardless of dirty-scheduler count — fine for the v0.1 audience.
 //! v0.2 scale path: a pool of N sessions (≈ dirty CPU schedulers) to recover core-level parallelism.
 //!
-//! ## load-dynamic
-//! `ort` is built `load-dynamic` (rc.12 → ONNX Runtime 1.24; bundle libonnxruntime 1.24.x in
-//! priv/lib). The dylib is located at runtime via `init_ort_from/1` (call from Elixir with the
-//! priv/lib path) or, for local dev, the `ORT_DYLIB_PATH` env var.
+//! ## Linking
+//! `ort` is built with `download-binaries` (rc.12 → ONNX Runtime 1.24, api-24): the prebuilt ORT
+//! is fetched at build time and **statically linked** into this cdylib. The artifact is therefore
+//! self-contained — no `libonnxruntime` to ship alongside it, no dlopen at runtime, no env var.
 
 use ndarray::{Array1, Array2, Array3};
 use ort::session::{builder::GraphOptimizationLevel, Session};
@@ -72,16 +72,6 @@ impl HiddenState {
 // rustler 0.38: NIFs are auto-discovered; resources auto-register via #[resource_impl].
 fn load(_env: Env, _info: Term) -> bool {
     true
-}
-
-/// Initialize ort's load-dynamic dylib path (call once from Elixir with the priv/lib libonnxruntime
-/// path). Optional for local dev if `ORT_DYLIB_PATH` is set. Process-global, first-call-wins.
-#[rustler::nif]
-fn init_ort_from(dylib_path: String) -> Result<rustler::Atom, String> {
-    // init_from -> Result<EnvironmentBuilder>; commit() -> bool (true if this call set the
-    // process-global env, false if one was already committed — both mean ort is initialized).
-    let _committed = ort::init_from(dylib_path).map_err(e2s)?.commit();
-    Ok(atoms::ok())
 }
 
 #[rustler::nif(schedule = "DirtyCpu")]

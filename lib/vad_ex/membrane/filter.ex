@@ -13,9 +13,7 @@ if Code.ensure_loaded?(Membrane.Filter) do
     Slot it after a `Membrane.Opus.Decoder` (configured to 16 kHz) and before your sink/ASR.
 
     Parent notifications on speech boundaries are a v0.2 item (they need the wider Endpointer
-    callback — see `docs/research/07-2026-06-23-verification-and-models.md` §5).
-
-    See `docs/research/03-membrane-integration.md`.
+    callback).
     """
 
     use Membrane.Filter
@@ -48,7 +46,6 @@ if Code.ensure_loaded?(Membrane.Filter) do
     @impl true
     def handle_init(_ctx, opts) do
       model_path = opts.model_path || Path.join(:code.priv_dir(:vad_ex), "models/silero_vad.onnx")
-      :ok = Native.ensure_initialized()
 
       with {:ok, model} <- Native.load_model(model_path),
            {:ok, stream} <- Native.new_stream(model) do

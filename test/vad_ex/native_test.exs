@@ -1,10 +1,11 @@
 defmodule VadEx.NativeTest do
   use ExUnit.Case, async: false
 
-  # NIF golden-vector tests. Tagged :nif — excluded from a plain `mix test` (which can't compile
-  # the NIF without a build/release) and run only when the NIF is built:
+  # NIF golden-vector tests. Tagged :nif — run only when the NIF is built from source:
   #
-  #     ORT_DYLIB_PATH=/path/to/libonnxruntime.{dylib,so} VAD_EX_BUILD=1 mix test --include nif
+  #     VAD_EX_BUILD=1 mix test --include nif
+  #
+  # (ORT is statically linked into the NIF, so no ORT_DYLIB_PATH is needed.)
   #
   # The fixtures (test/fixtures/*.pcm) are the EXACT s16le bytes the golden probabilities in
   # golden_v6_2.json were computed from (decode i16/32768), so process_chunk must reproduce them.

@@ -1,0 +1,75 @@
+name: release
+
+# Build a self-contained precompiled NIF for each target and attach it to the GitHub release.
+# ONNX Runtime is STATICALLY linked into the NIF (ort `download-binaries`), so each artifact is a
+# single .so/.dll with no companion libonnxruntime — see docs/decisions/0004-static-link-ort.md.
+#
+# Trigger: push a version tag (e.g. `v0.1.0`). The tag's version MUST match @version in mix.exs.
+# After the release is published, generate and commit the checksum file (see release steps in
+# docs/staged-implementation-plan.md Stage 4):
+#   mix rustler_precompiled.download VadEx.Native --all --print > checksum-Elixir.VadEx.Native.exs
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: ${{ matrix.target }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-apple-darwin
+            runner: macos-15
+          - target: x86_64-unknown-linux-gnu
+            runner: ubuntu-24.04
+          - target: aarch64-unknown-linux-gnu
+            runner: ubuntu-24.04-arm
+          - target: x86_64-pc-windows-msvc
+            runner: windows-2022
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # RustlerPrecompiled embeds @version from mix.exs in the artifact name; read it from there
+      # so the produced tarball matches what consumers download.
+      - name: Read version from mix.exs
+        id: meta
+        shell: bash
+        run: |
+          version=$(sed -n 's/^[[:space:]]*@version "\(.*\)"/\1/p' mix.exs | head -1)
+          if [ -z "$version" ]; then echo "could not parse @version from mix.exs" >&2; exit 1; fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "vad_ex version: $version"
+
+      # The action does NOT install Rust. ort rc.12 needs rustc >= 1.91.
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.91"
+          targets: ${{ matrix.target }}
+
+      # Builds the crate for `target` and produces the rustler_precompiled tarball.
+      # ort downloads + statically links ONNX Runtime at build time (needs network).
+      - name: Build precompiled NIF
+        id: build
+        uses: philss/rustler-precompiled-action@v1.1.5
+        with:
+          project-name: vad_ex
+          project-version: ${{ steps.meta.outputs.version }}
+          project-dir: "native/vad_ex"
+          target: ${{ matrix.target }}
+          nif-version: "2.15"
+
+      - name: Attach artifact to the release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: ${{ steps.build.outputs.file-path }}

@@ -11,12 +11,13 @@ crate-type = ["cdylib"]
 
 [dependencies]
 rustler = "0.38"
-# ONNX Runtime bindings. `load-dynamic` => no libonnxruntime embedded at build;
-# we dlopen it at runtime from priv/lib (bundled alongside the precompiled .so).
-# default-features off to disable `download-binaries` (incompatible with precompiled NIF).
-# `api-24`: rc.12 targets ONNX Runtime 1.24 — required when default-features are off.
-# NOTE: bundle libonnxruntime 1.24.x per target (NOT 1.26). See docs/research/07.
-ort = { version = "=2.0.0-rc.12", default-features = false, features = ["load-dynamic", "ndarray", "api-24"] }
+# ONNX Runtime bindings. `download-binaries` => ort fetches pyke's prebuilt ORT 1.24
+# (api-24) at build time and *statically links* it into the cdylib. The resulting
+# `vad_ex.so` is self-contained — no libonnxruntime to ship or dlopen at runtime — so a
+# single precompiled artifact per target is all RustlerPrecompiled needs (no priv/lib
+# bundling, no ORT_DYLIB_PATH). `std` is required (it was previously pulled in transitively
+# by `load-dynamic`); `tls-rustls` is needed for the build-time CDN fetch.
+ort = { version = "=2.0.0-rc.12", default-features = false, features = ["std", "download-binaries", "ndarray", "api-24", "tls-rustls"] }
 ndarray = "0.17"
 
 [profile.release]

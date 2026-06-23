@@ -4,8 +4,8 @@ defmodule VadEx.Endpointer do
   events. Silero only outputs a probability per chunk; the endpointing logic —
   hysteresis, minimum durations, padding — lives here.
 
-  This module is the project's main differentiator over the prior-art gist,
-  which had no endpointing (see `docs/research/05-endpointing-turn-detection.md`).
+  This module is the project's main differentiator over prior art that exposed
+  the raw Silero probability with no endpointing.
 
   ## State machine
 
@@ -103,6 +103,6 @@ defmodule VadEx.Endpointer do
   end
 
   # Round UP: 250ms / 32ms = 7.8 -> 8 chunks. Flooring (div/2) gave 7, which both the struct
-  # default (min_speech_chunks: 8) and the unit test assume should be 8. See docs/research/07 §6.
+  # default (min_speech_chunks: 8) and the unit test assume should be 8.
   defp ms_to_chunks(ms), do: max(div(ms + @chunk_ms - 1, @chunk_ms), 1)
 end

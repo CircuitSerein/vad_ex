@@ -10,5 +10,3 @@ same range or better (no Python overhead).
 - per-chunk inference latency (µs), mean + P99, over a 1-hour stream in a `VadEx.Session` loop
 - end-to-end throughput: max concurrent `VadEx.Session` processes on one node
 - vs Python `silero-vad` baseline on identical audio
-
-See `docs/build-plan.md` §8.

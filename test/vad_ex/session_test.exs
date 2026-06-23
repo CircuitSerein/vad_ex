@@ -2,7 +2,7 @@ defmodule VadEx.SessionTest do
   use ExUnit.Case, async: false
 
   # End-to-end: PCM fixture -> VadEx.Session (NIF inference + endpointer) -> telemetry events.
-  # :nif tagged — run with: ORT_DYLIB_PATH=... VAD_EX_BUILD=1 mix test --include nif
+  # :nif tagged — run with: VAD_EX_BUILD=1 mix test --include nif
   @moduletag :nif
 
   alias VadEx.Session

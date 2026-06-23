@@ -18,7 +18,7 @@ defmodule VadEx do
   Audio contract for v0.1: **16 kHz, mono, signed 16-bit little-endian PCM**,
   fed in **512-sample (1024-byte) chunks** (the Silero v5 window at 16 kHz).
 
-  See `docs/architecture.md` and `docs/research/` for the full design rationale.
+  See `docs/architecture.md` for the design overview.
   """
 
   @typedoc "Raw PCM audio: mono, s16le. One chunk = 512 samples (1024 bytes) at 16 kHz."

@@ -1,0 +1,64 @@
+name: ci
+
+# Correctness gate: build the NIF from source (VAD_EX_BUILD=1) and run the full suite, including
+# the :nif golden-vector / integration tests, on Linux and macOS. Mirrors the local dev command.
+# Rust formatting + clippy run as a separate lint job.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15]
+    env:
+      VAD_EX_BUILD: "1"
+      MIX_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: "27"
+          elixir-version: "1.17"
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.91"
+
+      - name: Cache deps + build
+        uses: actions/cache@v4
+        with:
+          path: |
+            deps
+            _build
+            native/vad_ex/target
+          key: ${{ runner.os }}-mix-${{ hashFiles('mix.lock', 'native/vad_ex/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-mix-
+
+      - run: mix deps.get
+      # Builds the NIF from source (ort downloads + statically links ONNX Runtime) and runs all
+      # tests; --include nif lifts the default exclusion of the native-backed tests.
+      - run: mix test --include nif
+
+  lint:
+    name: rust fmt + clippy
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.91"
+          components: rustfmt, clippy
+      - run: cargo fmt --manifest-path native/vad_ex/Cargo.toml --check
+      - run: cargo clippy --manifest-path native/vad_ex/Cargo.toml --release -- -D warnings
