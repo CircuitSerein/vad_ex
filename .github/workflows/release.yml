@@ -67,6 +67,11 @@ jobs:
           project-dir: "native/vad_ex"
           target: ${{ matrix.target }}
           nif-version: "2.15"
+          # All 4 targets build natively on their own runner — no cross. Must be passed (and left
+          # empty) rather than omitted: the input's default is the string "false", which is TRUTHY
+          # in the action's `if: ${{ inputs.use-cross }}` gate and spuriously installs `cross`,
+          # whose setup then fails on non-x64-linux runners. An unset matrix key → "" → falsy → skip.
+          use-cross: ${{ matrix.use-cross }}
 
       - name: Attach artifact to the release
         uses: softprops/action-gh-release@v2
