@@ -56,6 +56,14 @@ defmodule VadEx.NativeTest do
     assert Enum.max(probs) < @golden["assert"]["silence_max_prob_below"]
   end
 
+  test "a real speech utterance drives the probability high", %{model: model} do
+    [utterance] = Enum.filter(@golden["cases"], &(&1["name"] == "utterance"))
+    probs = run_stream(model, File.read!(utterance["pcm"]))
+    # The recorded golden probs match reference Silero (Python onnxruntime) bit-for-bit on this
+    # clip; this asserts the speech region is actually detected, not merely that events fire.
+    assert Enum.max(probs) > @golden["assert"]["utterance_max_prob_above"]
+  end
+
   test "reset makes a re-run bit-identical", %{model: model} do
     pcm = File.read!("test/fixtures/tone220_16k_s16le.pcm")
     {:ok, stream} = Native.new_stream(model)
