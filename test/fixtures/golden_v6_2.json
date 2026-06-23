@@ -1,0 +1,79 @@
+{
+  "model": "silero_vad.onnx (snakers4 v6.2)",
+  "model_sha256": "1a153a22f4509e292a94e67d6f9b85e8deb25b4988682b7e174c65279d8788e3",
+  "model_size_bytes": 2327524,
+  "sample_rate": 16000,
+  "window": 512,
+  "context": 64,
+  "chunk_bytes": 1024,
+  "note": "Inputs are the s16le PCM fixture files; probs are what process_chunk must reproduce (NIF-identical decode i16/32768).",
+  "contract": {
+    "inputs": {
+      "input": "f32[1,576]",
+      "state": "f32[2,1,128]",
+      "sr": "i64[1]"
+    },
+    "outputs": {
+      "output": "f32[1,1]",
+      "stateN": "f32[2,1,128]"
+    }
+  },
+  "tolerance": 0.002,
+  "cases": [
+    {
+      "name": "silence",
+      "pcm": "test/fixtures/silence_16k_s16le.pcm",
+      "probs": [
+        0.00167,
+        0.006884,
+        0.008911,
+        0.007857,
+        0.005907,
+        0.005961,
+        0.005853,
+        0.00564,
+        0.005431,
+        0.005199,
+        0.005048,
+        0.004903,
+        0.004736,
+        0.004585,
+        0.004447,
+        0.004328,
+        0.004227,
+        0.004146,
+        0.004075,
+        0.004013
+      ]
+    },
+    {
+      "name": "tone220",
+      "pcm": "test/fixtures/tone220_16k_s16le.pcm",
+      "probs": [
+        0.072025,
+        0.119363,
+        0.037429,
+        0.013656,
+        0.007086,
+        0.00464,
+        0.004242,
+        0.003835,
+        0.003779,
+        0.003478,
+        0.003417,
+        0.003157,
+        0.00305,
+        0.002978,
+        0.002825,
+        0.002672,
+        0.002701,
+        0.003006,
+        0.00367,
+        0.00427
+      ]
+    }
+  ],
+  "assert": {
+    "silence_max_prob_below": 0.2
+  }
+}

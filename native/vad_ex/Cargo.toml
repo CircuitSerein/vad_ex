@@ -1,0 +1,23 @@
+[package]
+name = "vad_ex"
+version = "0.1.0"
+edition = "2021"
+authors = ["CircuitSerein"]
+license = "MIT"
+
+[lib]
+name = "vad_ex"
+crate-type = ["cdylib"]
+
+[dependencies]
+rustler = "0.38"
+# ONNX Runtime bindings. `load-dynamic` => no libonnxruntime embedded at build;
+# we dlopen it at runtime from priv/lib (bundled alongside the precompiled .so).
+# default-features off to disable `download-binaries` (incompatible with precompiled NIF).
+# `api-24`: rc.12 targets ONNX Runtime 1.24 — required when default-features are off.
+# NOTE: bundle libonnxruntime 1.24.x per target (NOT 1.26). See docs/research/07.
+ort = { version = "=2.0.0-rc.12", default-features = false, features = ["load-dynamic", "ndarray", "api-24"] }
+ndarray = "0.17"
+
+[profile.release]
+lto = true

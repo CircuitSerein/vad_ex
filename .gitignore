@@ -1,0 +1,25 @@
+# Elixir / Mix
+/_build/
+/cover/
+/deps/
+/doc/
+/.fetch
+erl_crash.dump
+*.ez
+*.beam
+/config/*.secret.exs
+.elixir_ls/
+
+# Rust NIF
+/native/vad_ex/target/
+# Locally-built NIF artifact (VAD_EX_BUILD=1); shipped via GitHub release assets, not git.
+/priv/native/
+
+# Env / secrets — never in git
+.env
+.env.*
+!.env.example
+
+# --- private docs: client comms, requirements, version requests — NEVER in git ---
+# Rides Syncthing between machines, not git. See library/_skeleton-docs/STANDARD-docs.md
+_private/

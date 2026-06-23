@@ -1,0 +1,4 @@
+# silero_vad.onnx (Silero VAD v5, MIT, ~2.22 MB) is downloaded/committed here.
+# Source: https://github.com/snakers4/silero-vad  (src/silero_vad/data/silero_vad.onnx)
+# HF mirror: https://huggingface.co/onnx-community/silero-vad
+# Download step is part of the build plan (docs/build-plan.md, day 1).
