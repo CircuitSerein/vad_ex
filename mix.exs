@@ -47,9 +47,12 @@ defmodule VadEx.MixProject do
     [
       licenses: ["MIT"],
       links: %{"GitHub" => @source_url},
-      # Ship sources + the bundled Silero model + the checksum guard. NOT target/.
-      files: ~w(lib native priv/models .formatter.exs mix.exs README.md LICENSE
-                CHANGELOG.md checksum-Elixir.VadEx.Native.exs)
+      # Ship Elixir + native SOURCE (for source fallback) + the bundled Silero model + the checksum
+      # guard. Explicitly NOT native/vad_ex/target/ (Rust build artifacts — 100s of MB).
+      files: ~w(lib priv/models .formatter.exs mix.exs README.md LICENSE
+                CHANGELOG.md checksum-Elixir.VadEx.Native.exs
+                native/vad_ex/src native/vad_ex/Cargo.toml native/vad_ex/Cargo.lock
+                native/vad_ex/.gitignore)
     ]
   end
 
