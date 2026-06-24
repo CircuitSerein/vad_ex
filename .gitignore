@@ -15,6 +15,13 @@ erl_crash.dump
 # Locally-built NIF artifact (VAD_EX_BUILD=1); shipped via GitHub release assets, not git.
 /priv/native/
 
+# Real-audio test corpus: raw downloads + decoded PCM are fetched on demand, never committed
+# (LibriSpeech/MUSAN are large + CC BY). Run test/corpus/fetch_corpus.sh to populate.
+# Only the derived golden vectors + manifest + fetch script are tracked.
+/test/corpus/.cache/
+/test/corpus/data/
+/test/corpus/.venv/
+
 # Env / secrets — never in git
 .env
 .env.*
