@@ -3,7 +3,10 @@
 All notable changes to `vad_ex` are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); versions follow SemVer.
 
-## [Unreleased]
+## [0.1.0] — 2026-06-24
+
+First release: minimum-shippable streaming VAD + endpointing on hex, precompiled (no Rust toolchain
+needed by consumers).
 
 ### Added — Stages 0–3 implemented & verified on a real build (2026-06-24)
 - **Silero v6.2 ONNX inference** through the Rust NIF (`process_chunk`): s16le decode → 64-sample
@@ -26,9 +29,20 @@ All notable changes to `vad_ex` are documented here. Format loosely follows
   no cross) via `philss/rustler-precompiled-action`, uploads artifacts to the GitHub release on tag.
 - **`.github/workflows/ci.yml`**: source-build test on Linux + macOS, plus `cargo fmt`/`clippy` lint.
 
+### Added — Stage 5: real-audio validation + benchmark (2026-06-24)
+- **Real-audio gate** (`test/real_audio_test.exs`, `@tag :real_audio`): the NIF reproduces reference
+  Silero (Python `onnxruntime` 1.27) **within 2e-3** across a real corpus — 20 LibriSpeech speakers
+  (CC BY 4.0) + 6 ESC-50 environmental-noise clips — cross-runtime (NIF ORT 1.24 vs Python 1.27),
+  plus behavioral asserts (speech drives prob high; sirens/horns/fireworks/engines never read as
+  speech). Corpus is fetched on demand (`test/corpus/`, pure-Python decode); audio is gitignored,
+  only the derived golden vector + per-clip sha256 are committed.
+- **Benchmark harness** (`bench/bench.exs` + `test/corpus/bench_ref.py`): single stream
+  **~139 µs/chunk (p99 160 µs) → ~230× realtime**; 40 concurrent `Session`s → ~41k chunks/s,
+  **~1326× realtime aggregate** (10 cores). Python `onnxruntime` 1.27 baseline ~89 µs/chunk.
+
 ### Changed
 - Model pinned to **Silero v6** (was v5) — drop-in identical tensor contract, lower error rates.
-- **Linking: `load-dynamic` → static.** Removed `VadEx.Native.init_ort_from/1` + `ensure_initialized/0`
+- **Linking: `load-dynamic` → static.** Removed the `init_ort_from` and `ensure_initialized` NIFs
   and their call sites — no runtime ORT init needed (the runtime is statically linked).
 - Precompiled targets trimmed to a lean 4 (darwin-arm64, linux-gnu x64/arm64, windows-msvc-x64);
   `nif_versions ["2.15"]`. `force_build` is now auto-on for `*-dev` versions, so a dev checkout's
@@ -37,15 +51,13 @@ All notable changes to `vad_ex` are documented here. Format loosely follows
   (rc.12 targets ONNX Runtime **1.24**, not 1.26). Rust resource API → `Resource` trait + `#[resource_impl]`.
 
 ### Fixed
-- `VadEx.Endpointer.ms_to_chunks/1` rounded down (`250ms → 7`); now rounds up (`→ 8`), matching the
-  struct default and the unit test.
-- `VadEx.Native.new_stream/1` now returns `{:ok, stream}` (matches `Session.init`).
+- The endpointer's `ms_to_chunks` helper rounded down (`250ms → 7`); now rounds up (`→ 8`), matching
+  the struct default and the unit test.
+- `new_stream` now returns `{:ok, stream}` (matches `Session.init`).
 
 ### Scaffolded
 - Project skeleton: mix project, Rust NIF crate (`native/vad_ex`), module stubs.
 - Key design decisions: Silero over TEN-VAD, a Rustler + `ort` NIF over `ortex`, dual
   GenServer / Membrane API. See [`docs/architecture.md`](docs/architecture.md).
 
-_No functional release yet. First target: `0.1.0` — minimum-shippable streaming VAD +
-endpointing on hex (precompiled). The packaging + CI are authored and locally verified; the
-actual release-matrix run + checksum commit happen when `v0.1.0` is tagged._
+[0.1.0]: https://github.com/CircuitSerein/vad_ex/releases/tag/v0.1.0
